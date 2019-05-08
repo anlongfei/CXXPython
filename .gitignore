@@ -1,2 +1,6 @@
 a.out
 *.pyc
+build
+gen-*
+.swp
+bin
