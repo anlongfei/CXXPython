@@ -90,6 +90,7 @@ int main(int argc, char *argv[]) {
     CHECK_POINT(pInstancePersonFac);
     PyObject* result = PyObject_CallMethod(pClassPersonFac, "getOnPerson", "O", pInstancePersonFac);
     CHECK_POINT(result); // TODO how to deal with result, i have no idea ...
+    // may be referance : https://zhuanlan.zhihu.com/p/48863358
 
    // // 6. 结束
     Py_DECREF(pModule);
