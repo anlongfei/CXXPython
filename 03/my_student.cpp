@@ -45,8 +45,6 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    PyObject *pName, *pModule;
-
     // 2. 导入系统模块
     if (PyRun_SimpleString("import sys") != 0) { // 导入系统模块
         std::cerr << "error !!! "<<  __FILE__ << ":" << __LINE__ << " " << "PyRun_SimpleString fail !!!" << std::endl;
@@ -58,37 +56,53 @@ int main(int argc, char *argv[]) {
         std::cerr << "error !!! "<<  __FILE__ << ":" << __LINE__ << " " << "PyRun_SimpleString fail !!!" << std::endl;
         return -1;
     }
-    pModule = PyImport_ImportModule("stu_test");
+    PyObject* pModule = PyImport_ImportModule("stu_test");
     CHECK_POINT(pModule);
 
-    // 4. 引入函数、构造参数
-    PyObject *pfunc, *args, *results;
-    pfunc= PyObject_GetAttrString(pModule, "print_stu"); //pModule是上一步load好的Python模块
-    CHECK_POINT(pfunc);
+    // 4. 模块的字典列表
+    PyObject* pDict = PyModule_GetDict(pModule);
+    CHECK_POINT(pDict);
 
-    // ref: https://docs.python.org/3.6/extending/extending.html?highlight=py_buildvalue
-    pytest::Student s1;
-    s1.name = "anlongfei";
-    s1.sex = "male";
-    const std::string serialize_string = serializeToString(s1);
-    //std::cout << "serializeToString s1 : " << serialize_string  << " size: " << serialize_string.size() << std::endl;
+    // 5. 应用
+    // 5.1 调用函数
+    PyObject* pFunHi = PyDict_GetItemString(pDict, "sayhi");
+    CHECK_POINT(pFunHi);
+    PyObject_CallFunction(pFunHi, "s", "小明");
+    // 5.2 C++2Python
+        // 获取Person类
+    PyObject* pClassPerson = PyDict_GetItemString(pDict, "Person");
+    CHECK_POINT(pClassPerson);
+        // 构造Person的实例
+    PyObject* person_args = Py_BuildValue("ssi", "小明", "男", 30);
+    PyObject* pInstancePerson = PyObject_CallObject(pClassPerson, person_args);
+        //  调用类中函数
+    PyObject_CallMethod(pClassPerson, "speak", "O", pInstancePerson); // 参考：https://blog.csdn.net/yiyouxian/article/details/51995029
 
-    //args = Py_BuildValue("s", serialize_string); //设置调用func时的输入变量，这里假设为123,456 ; 
-    args = Py_BuildValue("is", 12, serialize_string.c_str());
-    CHECK_POINT(args);
+        // 调用introduce函数，参数是Persion对象
+    PyObject* pFunIntro = PyDict_GetItemString(pDict, "introduce");
+    CHECK_POINT(pFunIntro);
+    PyObject_CallFunction(pFunIntro, "O", pInstancePerson);
 
-    // 5. 函数调用，处理结果
-    //PyObject_CallFunction(pfunc, "s", args);
-    //PyObject_CallFunctionObjArgs(pfunc, args); // 自定义函数调用
-    PyObject_CallObject(pfunc, args); // 自定义函数调用
-    //CHECK_POINT(results);
-    //std::cout << PyLong_AsLong(results) << std::endl;;
+    // 5.3 Python2C++
+    PyObject* pClassPersonFac = PyDict_GetItemString(pDict, "PersonFactory");
+    CHECK_POINT(pClassPersonFac);
+    PyObject* pInstancePersonFac = PyObject_CallObject(pClassPersonFac, NULL);
+    CHECK_POINT(pInstancePersonFac);
+    PyObject* result = PyObject_CallMethod(pClassPersonFac, "getOnPerson", "O", pInstancePersonFac);
+    CHECK_POINT(result); // TODO how to deal with result, i have no idea ...
 
-    // 6. 结束
-    Py_DECREF(pfunc);
+   // // 6. 结束
+    Py_DECREF(pModule);
+    Py_DECREF(pDict);
+    Py_DECREF(pFunHi);
+    Py_DECREF(pClassPerson);
+    Py_DECREF(person_args);
+    Py_DECREF(pInstancePerson);
+    Py_DECREF(pFunIntro);
+    Py_DECREF(pClassPersonFac);
+    Py_DECREF(pInstancePersonFac);
+    Py_DECREF(result);
     Py_Finalize();
     return 0;
 }
-
-// g++ -I./include -lpython3.6m my_student.cpp -O0 -std=c++11
 
