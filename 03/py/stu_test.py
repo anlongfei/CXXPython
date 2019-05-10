@@ -15,7 +15,7 @@ def introduce(obj):
     print("主持人:这位是%s,%s,今年%d岁,大家欢迎!" % (obj.name, obj.sex, obj.age))
 
 class PersonFactory:
-    def getOnPerson(self):
+    def getOnePerson(self):
         p = Person("小花","女",1234567)
         return p
 
@@ -24,4 +24,4 @@ class PersonFactory:
 #p.speak()
 #introduce(p)
 #pf = PersonFactory()
-#introduce(pf.getOnPerson())
+#introduce(pf.getOnePerson())
